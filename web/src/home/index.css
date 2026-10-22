@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", Tahoma, Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-quran: "Traditional Arabic", "Times New Roman", serif;
+}
+
+:root {
+    --max: 1200px;
+    --gap: 20px;
+    --radius: 16px;
+    --brand: #3b82f6;
+    --hub-focus: #3b82f6;   /* owner section focus = same blue as the home ring (UX-AUDIT A8) */
+    --bg: #0f172a;
+}
+
+html, body {
+  background-color: var(--bg);
+  color: white;
+  direction: rtl;
+}
+
+body[data-page="dashboard"] {
+  overflow: hidden;
+}
+
+/* على شاشات التلفزيون الأفقية نربط حجم الخط الجذري بارتفاع النافذة (vh) بدل قيمة
+   ثابتة، فتتقلّص كل عناصر الواجهة (المبنية على rem) لتناسب الشاشة دائمًا دون تمرير —
+   بغضّ النظر عن عدد بكسلات CSS التي يبلّغ عنها WebView (كثير من أجهزة أندرويد TV
+   تُبلّغ عن ~960×540 بكسل CSS بسبب devicePixelRatio). البوابة min-width:600px
+   تستثني الهاتف في الوضع الرأسي (لوحة الإدارة) فيبقى بحجمه الطبيعي. */
+@media (min-width: 600px) and (orientation: landscape) {
+  html {
+    font-size: clamp(9px, 2.05vh, 26px);
+  }
+}
+
+/* الشاشات الأطول (WebView يُبلّغ عن ارتفاع 1080 CSS فأكثر) تتحمّل خطًا أكبر
+   نسبةً لارتفاعها، فنملأ المساحة بشكل أفضل بدل ترك فراغ أسفل البطاقات. */
+@media (min-width: 600px) and (orientation: landscape) and (min-height: 800px) {
+  html {
+    font-size: clamp(9px, 2.1vh, 28px);
+  }
+}
+
+/* Custom styles for D-Pad focus.
+   يُطبَّق على العناصر القابلة للتفاعل فقط (لا حاويات التمرير) لإبراز
+   العنصر المحدَّد بوضوح على شاشة كبيرة عند التنقّل بالريموت. */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[tabindex]:not([tabindex="-1"]):focus,
+[role="button"]:focus {
+  outline: 4px solid var(--brand) !important;
+  outline-offset: 2px;
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.25), 0 0 26px 6px rgba(59, 130, 246, 0.45) !important;
+  border-radius: 0.75rem;
+  transition: outline 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* TV focus ring (Dashboard.tsx, virtual focus): one floating frame moved over the highlighted element.
+   The element itself never changes, because on the TCL TV any repaint of a card cost 3-4 frames of 100-200 ms,
+   while moving this frame cost none (DECISIONS H-014). */
+.tv-focus-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px solid var(--brand);
+  border-radius: 0.9rem;
+  display: none;
+}
+/* Readable from the sofa (UX-AUDIT A4): on the TV (960x540 CSS, dpr 2) small text was 8-10 CSS px (16-20 device px).
+   Floors keep the size order (xs < sm < base < lg); bigger screens keep their larger rem values. Unlayered, so these
+   win over Tailwind's layered utilities. Secondary grey text is lightened for contrast. */
+.tv-lite .text-xs { font-size: max(12px, var(--text-xs)); }
+.tv-lite .text-sm { font-size: max(12.5px, var(--text-sm)); }
+.tv-lite .text-base { font-size: max(13px, var(--text-base)); }
+.tv-lite .text-lg { font-size: max(14px, var(--text-lg)); }
+.tv-lite [class*="text-[0.6"] { font-size: 12px; }
+.tv-lite .text-zinc-500, .tv-lite .text-zinc-600 { color: #a1a1aa; }
+
+/* لا تُبرِز حاوية التمرير الرئيسية نفسها عند استلامها التركيز برمجياً. */
+[data-scroll-area="true"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+.news-ticker-container, .adhkar-ticker-container {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-marquee {
+  animation: marquee var(--duration, 40s) linear infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* TV (TV Hub): no backdrop blur and no blurred background circles, see main.tsx.
+   Two separate rules on purpose: the CSS minifier merges prefixed/unprefixed declarations of one rule and kept only
+   -webkit-backdrop-filter, so the real blur stayed on (DECISIONS H-008). */
+.tv-lite [class*="backdrop-"] { backdrop-filter: none !important; }
+.tv-lite [class*="backdrop-"]:not(#_) { -webkit-backdrop-filter: none !important; }
+.tv-lite [class*="blur-[120px]"] { display: none !important; }
+
+/* Tickers and the prayer-card glow as CSS animations (compositor thread), see Dashboard.tsx */
+@keyframes ticker-run { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--ticker-w, 0px), 0, 0); } }
+.ticker-run { animation: ticker-run 50s linear infinite; will-change: transform; }
+@keyframes prayer-glow { 0%, 100% { opacity: .1; } 50% { opacity: .3; } }
+.prayer-glow { animation: prayer-glow 2s ease-in-out infinite; }

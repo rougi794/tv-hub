@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>تشخيص - المرحلة 0</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111; color: #eee; font: 18px/1.4 sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  #side { width: 34%; padding: 12px; overflow-y: auto; }
+  #main { flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 8px; min-width: 0; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .ver { opacity: .4; font-size: 13px; }
+  button { display: block; width: 100%; margin: 4px 0; padding: 10px; font-size: 18px; border-radius: 8px;
+           border: 3px solid transparent; background: #2a2f3a; color: #fff; text-align: right; }
+  button:focus { outline: none; border-color: #ffd400; box-shadow: 0 0 14px #ffd400; background: #3b4252; }
+  .grp { margin-top: 10px; font-size: 14px; opacity: .6; }
+  #stage { position: relative; height: 45%; background: #000; border-radius: 8px; overflow: hidden; }
+  #stage video, #stage iframe, #stage #ytp { width: 100%; height: 100%; border: 0; }
+  #stats { font: 14px monospace; direction: ltr; text-align: left; white-space: pre; opacity: .8; }
+  #log { flex: 1; overflow-y: auto; background: #000; border-radius: 8px; padding: 8px;
+         font: 13px/1.35 monospace; direction: ltr; text-align: left; white-space: pre-wrap; }
+  .ok { color: #7f7; } .bad { color: #f77; } .info { color: #9cf; }
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>تشخيص التلفزيون <span class="ver">v0.2</span></h1>
+  <button data-act="home">⬅ رجوع إلى الواجهة (أو زر Back)</button>
+  <div class="grp">البيئة</div>
+  <button data-act="env">1. معلومات WebView والترميزات</button>
+  <div class="grp">البث (اتصال واحد فقط في كل مرة)</div>
+  <button data-act="xhr">2. اختبار CORS/XHR للقائمة</button>
+  <button data-act="native">3أ. تشغيل native</button>
+  <button data-act="hls">3ب. تشغيل hls.js</button>
+  <button data-act="stop">إيقاف كامل</button>
+  <button data-act="restart">4. اختبار إيقاف ثم تشغيل (0/3/10/30 ث)</button>
+  <button data-act="warmup">5. اختبار Warm-up للقناة الثانية</button>
+  <div class="grp">يوتيوب</div>
+  <button data-act="yt">6أ. IFrame API (بدون sandbox)</button>
+  <button data-act="ytsandbox">6ب. iframe مع sandbox</button>
+  <button data-act="ytapi">6ج. Data API: عناصر القائمة</button>
+  <button data-act="ytstop">إيقاف يوتيوب</button>
+  <div class="grp">أخرى</div>
+  <button data-act="keys">اختبار أكواد أزرار الريموت (10 ث)</button>
+  <button data-act="reminders">التذكيرات: الموعد القادم وآخر تذكير عُرض</button>
+  <button data-act="clear">مسح السجل</button>
+</div>
+<div id="main">
+  <div id="stage"></div>
+  <div id="stats"></div>
+  <div id="log"></div>
+</div>
+
+<script src="vendor/hls.min.js"></script>
+<script>
+'use strict';
+// ---------- logging (masked; mirrored to console so it shows in adb logcat) ----------
+var CFG = null, secrets = [];
+function mask(s) {
+  s = String(s);
+  secrets.forEach(function (x) { if (x) s = s.split(x).join('***'); });
+  return s;
+}
+function log(msg, cls) {
+  var line = new Date().toISOString().substr(11, 8) + ' ' + mask(msg);
+  var el = document.createElement('div');
+  el.className = cls || '';
+  el.textContent = line;
+  var box = document.getElementById('log');
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  console.log('DIAG|' + (cls || 'log') + '|' + line);
+}
+var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+// ---------- config ----------
+function loadConfig() {
+  return fetch('config.json', { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function (j) {
+    CFG = j.userSettings || {};
+    var s = CFG.stream || {};
+    secrets = [s.username, s.password, (CFG.youtube || {}).apiKey].filter(Boolean);
+    log('config.json loaded. stream ids: ' + JSON.stringify(s.testStreamIds || []), 'info');
+  }).catch(function (e) { log('config.json not loaded: ' + e.message, 'bad'); });
+}
+function streamUrl(idx) {
+  var s = (CFG && CFG.stream) || {};
+  var id = (s.testStreamIds || [])[idx || 0];
+  if (!s.baseUrl || !s.username || !id) throw new Error('config.json incomplete (baseUrl/username/password/testStreamIds)');
+  return s.baseUrl.replace(/\/+$/, '') + '/live/' + encodeURIComponent(s.username) + '/' +
+         encodeURIComponent(s.password) + '/' + id + '.m3u8';
+}
+
+// ---------- 1. environment ----------
+function envInfo() {
+  var v = document.createElement('video');
+  log('UA: ' + navigator.userAgent, 'info');
+  log('Hls.isSupported() = ' + (window.Hls ? Hls.isSupported() : 'hls.js missing') + ', hls.js ' + (window.Hls ? Hls.version : ''));
+  log("canPlayType('application/vnd.apple.mpegurl') = '" + v.canPlayType('application/vnd.apple.mpegurl') + "'");
+  log("canPlayType('application/x-mpegURL') = '" + v.canPlayType('application/x-mpegURL') + "'");
+  var codecs = ['avc1.4d401f', 'avc1.64001f', 'hvc1.1.6.L93.B0', 'mp4a.40.2', 'ac-3', 'ec-3'];
+  codecs.forEach(function (c) {
+    var t = 'video/mp4; codecs="' + c + '"';
+    var ok = window.MediaSource ? MediaSource.isTypeSupported(t) : 'no MSE';
+    log('MSE ' + c + ' = ' + ok, ok === true ? 'ok' : 'bad');
+  });
+  log('webkitAudioDecodedByteCount in video: ' + ('webkitAudioDecodedByteCount' in v));
+  log('screen ' + screen.width + 'x' + screen.height + ' dpr=' + devicePixelRatio + ' origin=' + location.origin);
+}
+
+// ---------- player state (single active connection, mutex) ----------
+var video = null, hls = null, busy = false, statsTimer = null, t0 = 0, firstFrameAt = 0;
+function stage() { return document.getElementById('stage'); }
+
+function fullStop() {
+  if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
+  if (hls) {
+    try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch (e) { log('hls destroy error ' + e.message, 'bad'); }
+    hls = null;
+  }
+  if (video) {
+    try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) {}
+    video.remove();
+    video = null;
+  }
+  document.getElementById('stats').textContent = '';
+}
+
+function newVideo() {
+  fullStop();
+  video = document.createElement('video');
+  video.autoplay = true;
+  video.muted = false;
+  video.playsInline = true;
+  stage().innerHTML = '';
+  stage().appendChild(video);
+  firstFrameAt = 0;
+  t0 = performance.now();
+  ['loadedmetadata', 'playing', 'waiting', 'stalled', 'ended'].forEach(function (ev) {
+    video.addEventListener(ev, function () { log('video ' + ev + ' @' + Math.round(performance.now() - t0) + 'ms'); });
+  });
+  video.addEventListener('error', function () {
+    var e = video && video.error;
+    log('video error code=' + (e && e.code) + ' msg=' + (e && e.message), 'bad');
+  });
+  statsTimer = setInterval(updateStats, 1000);
+  return video;
+}
+
+function updateStats() {
+  if (!video) return;
+  var q = video.getVideoPlaybackQuality ? video.getVideoPlaybackQuality() : {};
+  var frames = q.totalVideoFrames || video.webkitDecodedFrameCount || 0;
+  if (frames > 0 && !firstFrameAt) {
+    firstFrameAt = performance.now();
+    log('FIRST FRAME after ' + Math.round(firstFrameAt - t0) + 'ms (' + video.videoWidth + 'x' + video.videoHeight + ')', 'ok');
+  }
+  document.getElementById('stats').textContent =
+    'res=' + video.videoWidth + 'x' + video.videoHeight + ' t=' + video.currentTime.toFixed(1) +
+    ' frames=' + frames + ' dropped=' + (q.droppedVideoFrames || 0) +
+    ' audioBytes=' + video.webkitAudioDecodedByteCount + ' videoBytes=' + video.webkitVideoDecodedByteCount +
+    ' readyState=' + video.readyState;
+}
+
+function playNative(idx) {
+  var url = streamUrl(idx);
+  newVideo();
+  log('native: set src', 'info');
+  video.src = url;
+  var p = video.play();
+  if (p && p.catch) p.catch(function (e) { log('play() rejected: ' + e.name + ' ' + e.message, 'bad'); });
+}
+
+function playHls(idx) {
+  var url = streamUrl(idx);
+  if (!Hls.isSupported()) { log('hls.js not supported', 'bad'); return; }
+  newVideo();
+  hls = new Hls({
+    lowLatencyMode: false,
+    manifestLoadingMaxRetry: 2,
+    levelLoadingMaxRetry: 2,
+    fragLoadingMaxRetry: 3,
+    startFragPrefetch: false
+  });
+  hls.on(Hls.Events.MANIFEST_LOADED, function (e, d) {
+    log('hls MANIFEST_LOADED @' + Math.round(performance.now() - t0) + 'ms levels=' + d.levels.length +
+        ' url=' + (d.networkDetails && d.networkDetails.responseURL), 'ok');
+  });
+  hls.on(Hls.Events.LEVEL_LOADED, function (e, d) {
+    if (d.details && d.details.fragments && d.details.fragments[0])
+      log('hls first fragment url: ' + d.details.fragments[0].url);
+  });
+  hls.on(Hls.Events.ERROR, function (e, d) {
+    var code = d.response ? d.response.code : (d.networkDetails ? d.networkDetails.status : '');
+    log('hls ERROR type=' + d.type + ' details=' + d.details + ' fatal=' + d.fatal + ' code=' + code +
+        (d.reason ? ' reason=' + d.reason : '') + (d.error ? ' err=' + d.error.message : ''), d.fatal ? 'bad' : '');
+  });
+  hls.on(Hls.Events.MEDIA_ATTACHED, function () { hls.loadSource(url); });
+  hls.attachMedia(video);
+  var p = video.play();
+  if (p && p.catch) p.catch(function (e) { log('play() rejected: ' + e.name + ' ' + e.message, 'bad'); });
+}
+
+// ---------- 2. isolated XHR / CORS test ----------
+function xhrGet(url, timeoutMs) {
+  return new Promise(function (resolve) {
+    var x = new XMLHttpRequest();
+    var start = performance.now();
+    x.open('GET', url);
+    x.timeout = timeoutMs || 15000;
+    x.onload = function () {
+      resolve({ ok: x.status >= 200 && x.status < 300, status: x.status, url: x.responseURL,
+                headers: x.getAllResponseHeaders(), body: x.responseText, ms: Math.round(performance.now() - start) });
+    };
+    x.onerror = function () { resolve({ ok: false, status: x.status, err: 'onerror (network or CORS)', ms: Math.round(performance.now() - start) }); };
+    x.ontimeout = function () { resolve({ ok: false, status: 0, err: 'timeout', ms: Math.round(performance.now() - start) }); };
+    x.send();
+  });
+}
+function reportXhr(tag, r) {
+  log(tag + ': status=' + r.status + ' ms=' + r.ms + (r.err ? ' ERR=' + r.err : '') +
+      (r.url ? ' responseURL=' + r.url : ''), r.ok ? 'ok' : 'bad');
+  if (r.headers) log(tag + ' exposed headers: ' + r.headers.replace(/\r?\n/g, ' | '));
+}
+function xhrTest() {
+  fullStop();
+  var url = streamUrl(0);
+  log('XHR test: no other stream active. fetching playlist...', 'info');
+  return xhrGet(url).then(function (r) {
+    reportXhr('playlist', r);
+    if (!r.ok || !r.body) return;
+    log('playlist first lines: ' + r.body.split('\n').slice(0, 8).join(' ¦ '));
+    var lines = r.body.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l && l[0] !== '#'; });
+    if (!lines.length) { log('playlist has no URIs (empty / warm-up?)', 'bad'); return; }
+    var next = new URL(lines[0], r.url || url).href;
+    return xhrGet(next).then(function (r2) {
+      reportXhr('child (' + (/\.m3u8/.test(next) ? 'variant' : 'segment') + ')', r2);
+      if (r2.ok && /\.m3u8/.test(next) && r2.body) {
+        var seg = r2.body.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l && l[0] !== '#'; })[0];
+        if (seg) return xhrGet(new URL(seg, r2.url || next).href).then(function (r3) { reportXhr('segment', r3); });
+      }
+    });
+  });
+}
+
+// ---------- 4. stop/restart test ----------
+function waitFirstFrame(timeoutMs) {
+  var start = performance.now();
+  return new Promise(function (resolve) {
+    (function poll() {
+      if (firstFrameAt) return resolve(Math.round(firstFrameAt - t0));
+      if (performance.now() - start > timeoutMs) return resolve(-1);
+      setTimeout(poll, 250);
+    })();
+  });
+}
+async function restartTest() {
+  var mode = (window.Hls && Hls.isSupported()) ? 'hls' : 'native';
+  var gaps = [0, 3, 10, 30], summary = [];
+  log('RESTART TEST mode=' + mode + ' gaps=' + gaps.join(',') + 's, 3 attempts each', 'info');
+  for (var g = 0; g < gaps.length; g++) {
+    var okCount = 0, times = [];
+    for (var a = 1; a <= 3; a++) {
+      if (mode === 'hls') playHls(0); else playNative(0);
+      var ff = await waitFirstFrame(25000);
+      updateStats();
+      log('gap=' + gaps[g] + 's attempt ' + a + ': ' + (ff >= 0 ? 'OK first frame ' + ff + 'ms' : 'FAIL (no frame in 25s)'), ff >= 0 ? 'ok' : 'bad');
+      if (ff >= 0) { okCount++; times.push(ff); await sleep(5000); }
+      fullStop();
+      await sleep(gaps[g] * 1000);
+    }
+    summary.push('gap ' + gaps[g] + 's: ' + okCount + '/3 ok' + (times.length ? ' (ttff ' + times.join('/') + 'ms)' : ''));
+  }
+  log('RESTART SUMMARY: ' + summary.join(' ; '), 'info');
+}
+
+// ---------- 5. warm-up test on second channel ----------
+async function warmupTest() {
+  fullStop();
+  var url = streamUrl(1);
+  log('WARM-UP: requesting 2nd channel playlist every 2s (5 tries)', 'info');
+  for (var i = 1; i <= 5; i++) {
+    var r = await xhrGet(url, 10000);
+    var uris = r.body ? r.body.split('\n').filter(function (l) { return l.trim() && l[0] !== '#'; }).length : 0;
+    log('try ' + i + ': status=' + r.status + ' ms=' + r.ms + ' uris=' + uris + (r.err ? ' ERR=' + r.err : ''), r.ok && uris ? 'ok' : 'bad');
+    if (r.ok && uris) break;
+    await sleep(2000);
+  }
+}
+
+// ---------- 6. YouTube ----------
+var ytPlayer = null;
+function ytStop() {
+  if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
+  stage().innerHTML = '';
+}
+function ytIds() {
+  var y = (CFG && CFG.youtube) || {};
+  if (!y.testVideoId && !y.playlistId) throw new Error('config.json: youtube.testVideoId or playlistId required');
+  return y;
+}
+function loadYtApi() {
+  if (window.YT && YT.Player) return Promise.resolve();
+  return new Promise(function (resolve, reject) {
+    window.onYouTubeIframeAPIReady = resolve;
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = function () { reject(new Error('iframe_api load failed')); };
+    document.head.appendChild(s);
+  });
+}
+function ytTest() {
+  fullStop(); ytStop();
+  var y = ytIds();
+  stage().innerHTML = '<div id="ytp"></div>';
+  loadYtApi().then(function () {
+    var vars = { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, disablekb: 1, fs: 0, iv_load_policy: 3,
+                 playsinline: 1, origin: location.origin };
+    if (y.playlistId) { vars.listType = 'playlist'; vars.list = y.playlistId; }
+    ytPlayer = new YT.Player('ytp', {
+      videoId: y.testVideoId || undefined, playerVars: vars,
+      events: {
+        onReady: function () { log('YT onReady (origin=' + location.origin + ')', 'ok'); ytPlayer.playVideo(); },
+        onStateChange: function (e) {
+          log('YT state ' + e.data + ' (-1 unstarted,0 ended,1 playing,2 paused,3 buffering,5 cued)');
+          if (e.data === 1) {
+            var pl = ytPlayer.getPlaylist && ytPlayer.getPlaylist();
+            if (pl) log('YT getPlaylist(): ' + pl.length + ' items');
+          }
+        },
+        onError: function (e) { log('YT onError ' + e.data + ' (2 bad id,5 html5,100 missing,101/150 embed blocked,153 referer)', 'bad'); }
+      }
+    });
+  }).catch(function (e) { log(e.message, 'bad'); });
+}
+function ytSandboxTest() {
+  fullStop(); ytStop();
+  var y = ytIds();
+  var src = 'https://www.youtube.com/embed/' + (y.testVideoId || 'videoseries') +
+    '?autoplay=1&controls=0&rel=0&modestbranding=1&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=' +
+    encodeURIComponent(location.origin) + (y.playlistId ? '&list=' + y.playlistId : '');
+  var f = document.createElement('iframe');
+  f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+  f.setAttribute('allow', 'autoplay; encrypted-media');
+  f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+  f.src = src;
+  f.onload = function () { log('sandboxed iframe loaded (watch screen: does the video play?)', 'info'); };
+  stage().appendChild(f);
+  window.addEventListener('message', function onMsg(ev) {
+    if (!/youtube\.com$/.test(new URL(ev.origin).hostname)) return;
+    var d = typeof ev.data === 'string' ? ev.data.slice(0, 200) : JSON.stringify(ev.data).slice(0, 200);
+    if (/onError|onStateChange|initialDelivery/.test(d)) log('sandbox msg: ' + d);
+  });
+}
+function ytApiTest() {
+  var y = (CFG && CFG.youtube) || {};
+  if (!y.apiKey || !y.playlistId) { log('config.json: youtube.apiKey and playlistId required', 'bad'); return; }
+  var u = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=' +
+          encodeURIComponent(y.playlistId) + '&key=' + encodeURIComponent(y.apiKey);
+  fetch(u).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); }).then(function (res) {
+    if (res.j.error) { log('Data API ' + res.s + ': ' + res.j.error.message, 'bad'); return; }
+    var items = res.j.items || [];
+    var visible = items.filter(function (i) { return !/^(Private|Deleted) video$/.test(i.snippet.title); });
+    log('Data API OK: total=' + res.j.pageInfo.totalResults + ' page=' + items.length + ' visible=' + visible.length +
+        (res.j.nextPageToken ? ' (has nextPage)' : ''), 'ok');
+    visible.slice(0, 5).forEach(function (i) { log('  - ' + i.snippet.resourceId.videoId + ' ' + i.snippet.title); });
+  }).catch(function (e) { log('Data API fetch failed: ' + e.message, 'bad'); });
+}
+
+// ---------- remote key codes ----------
+var keyProbeUntil = 0;
+document.addEventListener('keydown', function (e) {
+  if (performance.now() < keyProbeUntil) {
+    log('key: key=' + e.key + ' code=' + e.code + ' keyCode=' + e.keyCode);
+    if (e.keyCode !== 13) e.preventDefault();
+  }
+}, true);
+
+// ---------- spatial navigation for the remote ----------
+document.addEventListener('keydown', function (e) {
+  var dir = { 37: 'L', 38: 'U', 39: 'R', 40: 'D' }[e.keyCode];
+  if (!dir) return;
+  var btns = Array.prototype.slice.call(document.querySelectorAll('button'));
+  var cur = document.activeElement;
+  if (btns.indexOf(cur) < 0) { btns[0].focus(); e.preventDefault(); return; }
+  var i = btns.indexOf(cur);
+  if (dir === 'U' && i > 0) btns[i - 1].focus();
+  if (dir === 'D' && i < btns.length - 1) btns[i + 1].focus();
+  e.preventDefault();
+});
+
+// ---------- wiring ----------
+var actions = {
+  env: envInfo, xhr: xhrTest, stop: function () { fullStop(); log('stopped'); },
+  native: function () { ytStop(); playNative(0); }, hls: function () { ytStop(); playHls(0); },
+  restart: restartTest, warmup: warmupTest,
+  yt: ytTest, ytsandbox: ytSandboxTest, ytapi: ytApiTest, ytstop: ytStop,
+  keys: function () { keyProbeUntil = performance.now() + 10000; log('press remote buttons for 10s...', 'info'); },
+  clear: function () { document.getElementById('log').innerHTML = ''; },
+  reminders: function () {
+    return fetch('/api/hub/reminders/status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var t = function (ms) { return ms > 0 ? new Date(ms).toLocaleString('ar-SA-u-nu-latn', { hour12: false }) : '—'; };
+      log('reminders: interface=' + j.mode + '  overlay permission=' + j.overlay, j.overlay ? 'ok' : 'bad');
+      log('next alarm: ' + t(j.next), 'info');
+      log('last shown: ' + (j.last || '—') + '  at ' + t(j.lastAt), j.last ? 'ok' : 'info');
+    });
+  },
+  home: function () { fullStop(); ytStop(); location.href = '/'; }
+};
+document.getElementById('side').addEventListener('click', function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+  if (busy) { log('busy: wait for the current test to finish', 'bad'); return; }
+  busy = true;
+  log('> ' + b.textContent, 'info');
+  Promise.resolve().then(function () { return actions[b.dataset.act](); })
+    .catch(function (err) { log('ERROR: ' + err.message, 'bad'); })
+    .then(function () { busy = false; });
+});
+// release the IPTV connection when the page is hidden (FR-T5)
+document.addEventListener('visibilitychange', function () { if (document.hidden) { fullStop(); ytStop(); } });
+window.addEventListener('pagehide', function () { fullStop(); ytStop(); });
+
+// automation hook: diag.html#run=env,xhr runs tests in sequence (used from adb)
+loadConfig().then(async function () {
+  document.querySelector('button').focus();
+  var m = location.hash.match(/run=([\w,]+)/);
+  if (!m) return;
+  busy = true;
+  for (var a of m[1].split(',')) {
+    log('> auto ' + a, 'info');
+    try { await actions[a](); } catch (err) { log('ERROR: ' + err.message, 'bad'); }
+    if (a === 'native' || a === 'hls') { await waitFirstFrame(25000); await sleep(6000); updateStats(); log('STATS ' + document.getElementById('stats').textContent); fullStop(); await sleep(3000); }
+  }
+  busy = false;
+  log('AUTO RUN DONE', 'info');
+});
+</script>
+</body>
+</html>

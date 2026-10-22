@@ -1,0 +1,170 @@
+/* Theme: "space adventure" — deep navy sky, bold sporty colors (blue / orange / lime / red) */
+:root {
+  --glow: #ffd60a;
+  --ink: #0b1640;
+  --night1: #071233; --night2: #0d2a6b; --night3: #1565c0;
+  --orange: #ff8c1a; --orange2: #ffc23d;
+  --lime: #2ee59d;  --lime2: #b8f35a;
+  --sky: #29b6ff;   --sky2: #7fd8ff;
+  --red: #ff4545;   --red2: #ff8a3d;
+  --green: #22c55e; --green2: #8be04e;
+  --panel: rgba(255,255,255,.10);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  font-family: sans-serif; color: #fff;
+  background:
+    radial-gradient(2px 2px at 8% 12%, #fff8, transparent 60%), radial-gradient(2px 2px at 22% 70%, #fff6, transparent 60%),
+    radial-gradient(3px 3px at 41% 30%, #fff9, transparent 60%), radial-gradient(2px 2px at 63% 82%, #fff6, transparent 60%),
+    radial-gradient(2px 2px at 78% 18%, #fff8, transparent 60%), radial-gradient(3px 3px at 92% 55%, #fff7, transparent 60%),
+    radial-gradient(2px 2px at 54% 52%, #fff5, transparent 60%), radial-gradient(2px 2px at 33% 92%, #fff6, transparent 60%),
+    linear-gradient(170deg, var(--night1), var(--night2) 55%, var(--night3));
+}
+/* floating decorations */
+.deco { position: fixed; font-size: 44px; opacity: .8; pointer-events: none; animation: float 7s ease-in-out infinite; z-index: 0; }
+@keyframes float { 0%,100% { transform: translateY(0) rotate(0) } 50% { transform: translateY(-12px) rotate(4deg) } }
+@keyframes fly { 0% { transform: translate(0,0) rotate(-35deg) } 50% { transform: translate(-30px,-18px) rotate(-30deg) } 100% { transform: translate(0,0) rotate(-35deg) } }
+.ver { position: fixed; top: 4px; left: 8px; font-size: 11px; opacity: .35; }
+
+#page { height: 100%; overflow: hidden; padding: 10px 26px 14px; position: relative; z-index: 1; }
+#scroller { height: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 6px; }
+
+/* ---- top row ---- */
+.top { display: flex; gap: 18px; height: 128px; flex-shrink: 0; }   /* 150 -> 128: room for two-line names (UX-AUDIT K4) */
+.card { flex: 1; border-radius: 26px; position: relative; overflow: hidden; color: var(--ink);
+        box-shadow: 0 6px 0 rgba(0,0,0,.25), inset 0 -6px 0 rgba(0,0,0,.08); border: 3px solid rgba(255,255,255,.35); }
+.card .cap { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff;
+             padding: 3px 22px; border-radius: 0 0 16px 16px; font-size: 17px; font-weight: bold; white-space: nowrap; }
+#clockCard { background: linear-gradient(135deg, var(--orange), var(--orange2)); display: flex; flex-direction: column;
+             align-items: center; justify-content: center; padding-top: 4px; gap: 2px; }
+#greet { font-size: 18px; font-weight: bold; }
+#time { font-size: 38px; line-height: 1.1; font-weight: 900; direction: ltr; letter-spacing: 1px; }
+#dates { font-size: 16px; text-align: center; line-height: 1.3; font-weight: bold; }
+#letterCard { background: linear-gradient(135deg, var(--lime), var(--lime2)); display: flex; align-items: center;
+              justify-content: center; gap: 24px; padding-top: 26px; }
+#letterBig { font-size: 64px; font-weight: 900; color: #0d47a1; line-height: 1; text-shadow: 3px 3px 0 #fff; }
+#letterPic { font-size: 58px; line-height: 1; animation: float 4s ease-in-out infinite; }
+#letterWord { font-size: 30px; font-weight: bold; }
+#letterWord b { color: #d62828; }
+#photoCard { background: linear-gradient(135deg, var(--sky), var(--sky2)); display: flex; align-items: center;
+             justify-content: center; padding-top: 24px; cursor: pointer; }
+#photoCard:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 0 4px #fff, 0 0 28px 8px var(--glow); }
+#photo { height: 92px; max-width: 92%; border-radius: 18px; object-fit: cover; border: 4px solid #fff; }
+#photoEmoji { font-size: 84px; line-height: 1; }
+
+/* ---- shelves (glass panels with a colored stripe) ---- */
+.shelf { border-radius: 24px; flex-shrink: 0; padding: 4px 18px 4px; background: var(--panel);
+         border: 2px solid rgba(255,255,255,.14); border-top: 6px solid var(--stripe); }
+.shelf h2 { margin: 0 0 2px; font-size: 18px; text-align: center; }
+.shelf h2 span { background: var(--stripe); color: #fff; padding: 2px 22px; border-radius: 0 0 14px 14px; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+/* more items beyond this edge (UX-AUDIT K5): a fading arrow, set by markOverflow() in ui.ts */
+.shelf { position: relative; }
+.shelf.more-left::after, .shelf.more-right::before {
+  position: absolute; top: 40px; bottom: 6px; width: 70px; z-index: 3; pointer-events: none;
+  display: flex; align-items: center; font-size: 38px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+.shelf.more-left::after { content: '◀'; left: 0; justify-content: flex-start; padding-left: 8px;
+  background: linear-gradient(to right, rgba(13,42,107,.95), transparent); border-radius: 24px 0 0 24px; }
+.shelf.more-right::before { content: '▶'; right: 0; justify-content: flex-end; padding-right: 8px;
+  background: linear-gradient(to left, rgba(13,42,107,.95), transparent); border-radius: 0 24px 24px 0; }
+#chanShelf { --stripe: #1e88e5; }
+#ytShelf { --stripe: #e53935; }
+#appsShelf { --stripe: #2e9d4f; }
+.row { display: flex; gap: 26px; padding: 8px 10px 4px; overflow: hidden; scroll-behavior: smooth; }
+.item { flex: 0 0 auto; width: 118px; background: none; border: 0; padding: 0; color: #fff;
+        display: flex; flex-direction: column; align-items: center; gap: 4px; font: inherit; cursor: pointer; }
+.circle { width: 86px; height: 86px; border-radius: 50%; background: #fff; border: 5px solid var(--stripe, #fff);
+          box-shadow: 0 4px 10px rgba(0,0,0,.35); overflow: hidden; display: flex; align-items: center; justify-content: center;
+          font-size: 44px; transition: transform .15s, box-shadow .15s, border-color .15s; }
+.circle img { width: 100%; height: 100%; object-fit: cover; }
+.circle img.contain { object-fit: contain; background: #fff; }
+/* names on up to two lines (UX-AUDIT K4), larger and on a dark pill when selected (K2) */
+.label { font-size: 16px; font-weight: bold; max-width: 124px; line-height: 1.2; text-align: center; white-space: normal;
+         overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; min-height: 2.4em;
+         padding: 0 6px; border-radius: 10px; }
+/* only the circle glows: the button itself gets no rectangle (UX-AUDIT K2; .focusable:focus below is for other buttons) */
+.item.focusable:focus { outline: none; box-shadow: none; border-color: transparent; }
+.item:focus .circle { border-color: var(--glow); box-shadow: 0 0 0 4px #fff, 0 0 28px 8px var(--glow); transform: scale(1.16); }
+.item:focus .label { background: var(--ink); color: #fff; box-shadow: 0 0 0 2px var(--glow); }
+.soon .circle { background: rgba(255,255,255,.8); }
+.empty { font-size: 18px; opacity: .7; padding: 34px 0; text-align: center; width: 100%; }
+
+/* ---- picture of the day, full screen ---- */
+#photoLayer { background: #000; padding: 0; justify-content: center; }
+#photoBig { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* close button over the photo: selected when it opens, so OK closes it too */
+#photoClose { position: absolute; top: 22px; left: 22px; font-size: 26px; font-weight: bold; color: #fff;
+              background: rgba(7,18,51,.8); border: 4px solid transparent; border-radius: 20px; padding: 10px 26px; }
+#photoClose:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 22px var(--glow); }
+
+#toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: rgba(43,35,80,.9); color: #fff;
+         padding: 12px 34px; border-radius: 30px; font-size: 26px; display: none; z-index: 50; }
+
+/* ---- full-screen layers ---- */
+.overlay { position: fixed; inset: 0; background: rgba(20,16,45,.96); color: #fff; display: none; flex-direction: column;
+           align-items: center; padding: 22px; z-index: 40; }
+.overlay.open { display: flex; }
+.overlay h3 { font-size: 34px; margin: 0 0 6px; }
+.focusable:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 22px var(--glow); }
+
+/* ---- player ---- */
+#playerLayer { background: #000; padding: 0; z-index: 45; }      /* above the episode list */
+.track { height: 10px; background: rgba(255,255,255,.25); border-radius: 6px; overflow: hidden; direction: ltr; }
+.track i { display: block; height: 100%; width: 0; background: var(--glow); }
+#osd { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 7; width: 560px; padding: 14px 22px;
+       background: rgba(7,18,51,.85); border-radius: 20px; text-align: center; opacity: 0; transition: opacity .25s; }
+#osd.show { opacity: 1; }
+#osdText { font-size: 30px; font-weight: bold; margin-bottom: 8px; direction: ltr; }
+#osdTime { font-size: 18px; margin-top: 6px; direction: ltr; }
+#ctrlLayer { position: absolute; inset: 0; z-index: 8; display: none; flex-direction: column; align-items: center; justify-content: center;
+             gap: 14px; background: rgba(7,18,51,.92); }
+#ctrlLayer.show { display: flex; }
+#ctrlTitle { font-size: 26px; font-weight: bold; max-width: 1000px; text-align: center; }
+.track.big { width: 900px; height: 14px; }
+#ctrlTime { font-size: 20px; direction: ltr; }
+#ctrlBar { display: flex; gap: 22px; direction: ltr; margin-top: 10px; }
+#ctrlBar button { width: 150px; height: 130px; border-radius: 26px; border: 5px solid transparent; background: #1e3a8a; color: #fff;
+                  font-size: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
+#ctrlBar button span { font-size: 20px; font-weight: bold; }
+#ctrlBar button:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 26px var(--glow); transform: scale(1.08); }
+.vtext { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.vprog { height: 14px; background: rgba(0,0,0,.12); border-radius: 5px; overflow: hidden; }
+.vprog i { display: block; height: 100%; width: 0; background: #e53935; }
+.vitem.done .vtext span::after { content: ' ✅'; }
+#ytHost, #ytHost iframe, #chanVideo { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Crop YouTube's own chrome (title bar on top, logo / "more videos" / link at the bottom): the iframe is taller
+   than the screen, the 16:9 video stays fully visible in the middle, the bars sit in the cut-off letterbox. */
+#playerLayer { overflow: hidden; }
+#ytHost { top: -110px; bottom: auto; height: calc(100% + 220px); }
+#ytHost iframe { position: static; }
+#playerMsg.solid { background: #071233; }        /* opaque while a video starts: hides YouTube's start overlay */
+#chanVideo { background: #000; display: none; }
+.shield { position: absolute; inset: 0; z-index: 5; }                 /* swallows clicks: no YouTube links */
+#playerMsg { position: absolute; inset: 0; z-index: 6; display: none; align-items: center; justify-content: center;
+             flex-direction: column; gap: 16px; font-size: 34px; text-align: center; background: rgba(0,0,0,.6); }
+#playerMsg.show { display: flex; }
+#playerMsg .big { font-size: 90px; animation: float 2s ease-in-out infinite; }
+#playerTitle { position: absolute; bottom: 18px; right: 24px; z-index: 6; background: rgba(0,0,0,.55); padding: 6px 18px;
+               border-radius: 14px; font-size: 20px; opacity: 0; transition: opacity .4s; }
+#playerTitle.show { opacity: 1; }
+
+/* ---- YouTube vertical list ---- */
+#ytListLayer { background: linear-gradient(160deg, #ff8a8a, #ffb8b8); color: var(--ink); }
+.vlist { width: 900px; max-height: 620px; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 8px; }
+.vitem { display: flex; align-items: center; gap: 18px; background: rgba(255,255,255,.85); border: 5px solid transparent;
+         border-radius: 22px; padding: 8px; font: inherit; font-size: 22px; font-weight: bold; color: var(--ink); text-align: right; flex-shrink: 0; }
+.vitem img { width: 213px; height: 120px; object-fit: cover; border-radius: 14px; flex-shrink: 0; }
+.vitem:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 24px var(--glow); }
+
+/* ---- viewing times (timegate.ts): item outside its window ---- */
+.item.locked .circle { filter: grayscale(1) brightness(.75); }
+.item.locked .label { opacity: .65; }
+/* a badge over the bottom of the circle: adds no height, so the shelves keep fitting the screen */
+.item { position: relative; }
+.lockTime { position: absolute; top: 62px; left: 50%; transform: translateX(-50%); z-index: 2;
+            font-size: 15px; font-weight: bold; line-height: 1.25; text-align: center; white-space: nowrap;
+            min-width: 104px; max-width: 132px; overflow: hidden; text-overflow: ellipsis; padding: 2px 5px; border-radius: 8px; background: rgba(7,18,51,.88); color: #ffd60a; }
+
+/* episode counter next to the list title (UX-AUDIT K8) */
+#ytListCount { font-size: 22px; opacity: .8; margin-right: 18px; direction: ltr; unicode-bidi: isolate; display: inline-block; }

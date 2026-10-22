@@ -1,0 +1,33 @@
+{
+    "version":  1,
+    "channels":  [
+                     {
+                         "id":  "102375",
+                         "name":  "سبيس تون",
+                         "icon":  "channel_icons/102375.png",
+                         "category":  "KIDS - الاطفال",
+                         "source":  "KIDS: SPACETOON FHD"
+                     },
+                     {
+                         "id":  "304369",
+                         "name":  "بسمة",
+                         "icon":  "",
+                         "category":  "ALMAJD - المجد",
+                         "source":  "V3:Al Majd Basma"
+                     },
+                     {
+                         "id":  "304371",
+                         "name":  "روضة",
+                         "icon":  "",
+                         "category":  "ALMAJD - المجد",
+                         "source":  "V3:Al Majd Rawda"
+                     },
+                     {
+                         "id":  "304374",
+                         "name":  "أطفال المجد",
+                         "icon":  "",
+                         "category":  "ALMAJD - المجد",
+                         "source":  "V3:AL MAJD KIDS"
+                     }
+                 ]
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "name": "BBC",
+    "type": "rss",
+    "url": "https://feeds.bbci.co.uk/arabic/rss.xml"
+  },
+  {
+    "name": "عكاظ",
+    "type": "rss",
+    "url": "https://www.okaz.com.sa/rssFeed/0"
+  },
+  {
+    "name": "الجزيرة",
+    "type": "rss",
+    "url": "https://www.aljazeera.net/xml/rss/all.xml"
+  },
+  {
+    "name": "سبق",
+    "type": "rss",
+    "url": "https://www.sabq.org/rss?format=xml"
+  },
+  {
+    "name": "Sky News",
+    "type": "rss",
+    "url": "https://www.skynewsarabia.com/rss/all.xml"
+  },
+  {
+    "name": "العربية",
+    "type": "rss",
+    "url": "https://www.alarabiya.net/.mrss/ar.xml"
+  },
+  {
+    "name": "CNN بالعربية",
+    "type": "rss",
+    "url": "https://arabic.cnn.com/rss"
+  },
+  {
+    "name": "france24",
+    "type": "rss",
+    "url": "https://www.france24.com/ar/rss"
+  },
+  {
+    "name": "واس",
+    "type": "rss",
+    "url" : "https://www.spa.gov.sa/rss.xml"
+  },
+  {
+    "name": "صحيفة الشرق الأوسط",
+    "type": "rss",
+    "url" : "https://aawsat.com/rss.xml"
+  }
+]

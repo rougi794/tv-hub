@@ -1,0 +1,18 @@
+/* Screensaver: black, soft grey text (no full white on a static picture), large and readable from the sofa. */
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+body { color: #b8c0cc; font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; }
+#box { display: flex; flex-direction: column; align-items: center; gap: 18px; transition: transform 2.5s ease-in-out, opacity 1.2s; }
+#box.fade { opacity: 0; }
+#time { font-size: 150px; font-weight: 700; line-height: 1; letter-spacing: 2px; color: #d6dbe3; direction: ltr; }
+#time small { font-size: 54px; margin-inline-start: 14px; color: #8b95a5; }
+#dates { display: flex; gap: 28px; font-size: 30px; }
+#hijri { color: #c9a94a; }
+#photo { width: 300px; height: 300px; object-fit: cover; border-radius: 50%; border: 5px solid #1e2a44; opacity: .9; }
+#prayers { display: flex; gap: 14px; margin-top: 18px; }
+.p { min-width: 120px; padding: 14px 18px; border-radius: 18px; background: #0d1320; border: 2px solid #1a2333; text-align: center; }
+.p b { display: block; font-size: 24px; color: #8b95a5; font-weight: 600; }
+.p span { font-size: 38px; font-weight: 700; color: #c4cbd6; direction: ltr; display: inline-block; }
+.p.next { border-color: #2c5aa0; background: #0e1a30; }
+.p.next b { color: #7fa7e0; }
+#next { font-size: 28px; color: #7fa7e0; }
+[hidden] { display: none !important; }

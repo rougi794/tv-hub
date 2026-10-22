@@ -1,0 +1,40 @@
+/* Owner section overlay. Sized for the TV's real CSS viewport (960x540); everything is prefixed "hub-"
+   so it cannot clash with either interface's styles. */
+.hub-owner { position: fixed; inset: 0; z-index: 10000; display: none; background: rgba(12, 14, 34, .97); color: #fff;
+             font-family: system-ui, "Segoe UI", Tahoma, sans-serif; font-size: 15px; line-height: 1.4; overflow: hidden; }
+.hub-owner.open { display: flex; align-items: flex-start; justify-content: center; }
+.hub-owner h3 { margin: 0; font-size: 22px; }
+.hub-owner button { font-family: inherit; color: #fff; cursor: pointer; }
+/* Focus colour follows the interface (UX-AUDIT A8): yellow in kids, --hub-focus blue in home (index.css).
+   Higher specificity + !important: the home dashboard's global focus ring (index.css) must not add a second outline here */
+.hub-owner.open .hub-f.hub-f:focus { outline: none !important; border-color: var(--hub-focus, #ffd60a) !important; box-shadow: 0 0 16px var(--hub-focus, #ffd60a) !important;
+                                    background-color: #4a3f8f !important; border-radius: 12px; }
+
+.hub-pin { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.hub-pinshow { font-size: 30px; letter-spacing: 14px; min-height: 40px; direction: ltr; }
+.hub-msg { font-size: 14px; opacity: .85; min-height: 20px; text-align: center; margin: 4px 0; }
+.hub-pad { display: grid; grid-template-columns: repeat(3, 76px); gap: 8px; direction: ltr; }
+.hub-key { height: 50px; font-size: 22px; background: #34306a; border: 3px solid transparent; border-radius: 12px; }
+
+.hub-panel { width: 100%; height: 100%; padding: 14px 22px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
+.hub-head { display: flex; align-items: baseline; justify-content: space-between; }
+.hub-ver { font-size: 12px; opacity: .5; direction: ltr; }
+.hub-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hub-label { font-weight: bold; margin-inline-end: 4px; }
+.hub-btn { background: #34306a; border: 3px solid transparent; border-radius: 12px; padding: 7px 12px; font-size: 14px; }
+.hub-mode { padding: 8px 18px; font-size: 16px; }
+.hub-mode.on { background: #1f7a43; }
+
+.hub-apps { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; padding: 4px; }
+.hub-app { display: flex; gap: 6px; }
+.hub-appbtn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: #26234f; border: 3px solid transparent;
+              border-radius: 12px; padding: 5px; font-size: 13px; text-align: right; }
+.hub-appbtn img { width: 64px; height: 36px; object-fit: contain; background: #fff; border-radius: 6px; flex-shrink: 0; }
+.hub-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-tag { margin-inline-start: auto; font-size: 11px; padding: 2px 6px; border-radius: 8px; background: #555; flex-shrink: 0; }
+.hub-appbtn.on .hub-tag { background: #2e9d4f; }
+.hub-run { padding: 4px 10px; }
+
+.hub-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #2b2350; padding: 8px 22px;
+             border-radius: 20px; font-size: 16px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.hub-toast.show { opacity: 1; }

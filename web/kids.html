@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>تلفزيون الأطفال</title>
+</head>
+<body>
+<div class="deco" style="top:2px; right:34%; animation: fly 6s ease-in-out infinite">🚀</div>
+<div class="deco" style="top:44%; left:2px; animation-delay:-3s">🪐</div>
+<div class="deco" style="bottom:2px; right:4px; animation-delay:-5s">🦖</div>
+<div class="deco" style="bottom:2px; left:8px; animation-delay:-2s; font-size:36px">⚽</div>
+<div class="ver" id="ver"></div>
+
+<div id="page"><div id="scroller">
+  <div class="top">
+    <div class="card" id="clockCard">
+      <div id="greet"></div>
+      <div id="time">--:--</div>
+      <div id="dates"></div>
+    </div>
+    <div class="card" id="letterCard">
+      <div class="cap">حرف اليوم</div>
+      <div id="letterBig"></div>
+      <div id="letterPic"></div>
+      <div id="letterWord"></div>
+    </div>
+    <div class="card focusable" id="photoCard" tabindex="0">
+      <div class="cap">صورة اليوم</div>
+      <img id="photo" alt="" hidden>
+      <div id="photoEmoji" hidden></div>
+    </div>
+  </div>
+
+  <div class="shelf" id="chanShelf"><h2><span>📺 القنوات التلفزيونية</span></h2><div class="row" id="chanRow"></div></div>
+  <div class="shelf" id="ytShelf"><h2><span>▶️ فيديوهات يوتيوب</span></h2><div class="row" id="ytRow"></div></div>
+  <div class="shelf" id="appsShelf"><h2><span>🧩 البرامج</span></h2><div class="row" id="appsRow"></div></div>
+</div></div>
+<div id="toast"></div>
+
+<!-- picture of the day, full screen (OK on the card) -->
+<div class="overlay" id="photoLayer"><img id="photoBig" alt=""><button id="photoClose" class="focusable">✕ رجوع</button></div>
+
+<!-- full-screen player (YouTube or TV channel). No links: a transparent shield covers the player. -->
+<div class="overlay" id="playerLayer">
+  <div id="ytHost"></div>
+  <video id="chanVideo" playsinline></video>
+  <div class="shield" id="shield" tabindex="-1"></div>
+  <div id="playerMsg"></div>
+  <div id="playerTitle"></div>
+  <!-- seek indicator (←/→ while playing) -->
+  <div id="osd"><div id="osdText"></div><div class="track"><i id="osdFill"></i></div><div id="osdTime"></div></div>
+  <!-- pause screen: hides YouTube's pause overlay and gives big remote-friendly controls -->
+  <div id="ctrlLayer">
+    <div id="ctrlTitle"></div>
+    <div class="track big"><i id="ctrlFill"></i></div>
+    <div id="ctrlTime"></div>
+    <div id="ctrlBar">
+      <button id="cPrev">⏮<span>السابق</span></button>
+      <button id="cBack">⏪<span>10 ث</span></button>
+      <button id="cPlay">▶️<span>متابعة</span></button>
+      <button id="cFwd">⏩<span>10 ث</span></button>
+      <button id="cNext">⏭<span>التالي</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube: full vertical list (FR-Y3) -->
+<div class="overlay" id="ytListLayer">
+  <h3><span id="ytListTitle">▶️ كل الفيديوهات</span><span id="ytListCount"></span></h3>
+  <div class="vlist" id="ytList"></div>
+</div>
+
+<script type="module" src="/src/kids/main.ts"></script>
+</body>
+</html>

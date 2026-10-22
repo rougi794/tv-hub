@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>TV Hub — اختبار المرحلة 1</title>
+<style>
+  body { margin: 0; background: #0b1020; color: #e8ecf5; font: 16px/1.5 system-ui, sans-serif; }
+  header { padding: 10px 20px; background: #141b33; display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; }
+  header b { color: #7dd3fc; }
+  main { display: grid; grid-template-columns: 1fr 340px; gap: 12px; padding: 12px 20px; }
+  h2 { margin: 4px 0 8px; font-size: 16px; color: #a5b4fc; }
+  #apps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  button { background: #1e2747; color: inherit; border: 2px solid transparent; border-radius: 10px; padding: 6px; font: inherit; font-size: 12px; cursor: pointer; }
+  button img { display: block; width: 100%; height: 48px; object-fit: contain; margin-bottom: 4px; }
+  button:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 14px #fbbf24aa; background: #2b3768; }
+  #log { height: 380px; overflow: hidden; background: #050816; border-radius: 10px; padding: 8px; font: 12px/1.45 monospace; direction: ltr; text-align: left; white-space: pre-wrap; }
+  #tools { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  #tools button { padding: 10px 14px; font-size: 14px; }
+  #yt { position: fixed; inset: 0; background: #000; display: none; }
+  #yt.show { display: block; }
+  #yt iframe { width: 100%; height: 100%; border: 0; }
+</style>
+</head>
+<body>
+<header>
+  <span>الإصدار: <b id="ver">—</b></span>
+  <span>المضيف: <b id="host">—</b></span>
+  <span>الشاشة: <b id="scr">—</b></span>
+  <span>Chrome: <b id="chrome">—</b></span>
+  <span>window.fully: <b id="shim">—</b></span>
+  <span>الرؤية: <b id="vis">—</b></span>
+</header>
+<main>
+  <section>
+    <div id="tools">
+      <button id="btnYt">▶️ اختبار يوتيوب (تشغيل تلقائي)</button>
+      <button id="btnNav">🚫 اختبار حظر التنقل الخارجي</button>
+      <button id="btnHome">🏠 الواجهة الرئيسية (index)</button>
+    </div>
+    <h2>التطبيقات المثبتة — OK للتشغيل عبر window.fully.startApplication</h2>
+    <div id="apps"></div>
+  </section>
+  <section>
+    <h2>السجل (يُرسل أيضًا إلى logcat: TVHub)</h2>
+    <div id="log"></div>
+  </section>
+</main>
+<div id="yt"></div>
+<script>
+var COLS = 6;
+function $(id) { return document.getElementById(id); }
+function log(m) {
+  var line = new Date().toTimeString().slice(0, 8) + ' ' + m;
+  console.log('[hub-test] ' + m);
+  var el = $('log'); el.textContent = line + '\n' + el.textContent.slice(0, 4000);
+}
+$('host').textContent = location.host;
+$('scr').textContent = innerWidth + 'x' + innerHeight + ' @' + devicePixelRatio;
+$('chrome').textContent = (navigator.userAgent.match(/Chrome\/([\d.]+)/) || [])[1] || '?';
+$('shim').textContent = window.fully ? (window.tvHub ? 'shim (TV Hub)' : 'Fully') : 'غير موجود';
+function showVis() { $('vis').textContent = document.visibilityState; }
+showVis();
+document.addEventListener('visibilitychange', function () { showVis(); log('visibility -> ' + document.visibilityState); });
+window.addEventListener('hub:home', function () { log('hub:home (زر Home والصفحة ظاهرة)'); closeYt(); });
+fetch('/api/hub/ping', { cache: 'no-store' }).then(function (r) { return r.json(); })
+  .then(function (j) { $('ver').textContent = 'API v' + j.version; }).catch(function () { $('ver').textContent = 'لا API'; });
+
+// ---------- apps ----------
+var apps = [];
+try { apps = JSON.parse(window.fully && window.fully.getInstalledApps ? window.fully.getInstalledApps() : '[]'); } catch (e) { log('apps parse error'); }
+log('installed apps: ' + apps.length);
+apps.forEach(function (a) {
+  var b = document.createElement('button');
+  var img = new Image(); img.src = '/api/hub/icon?pkg=' + encodeURIComponent(a.pkg); img.alt = '';
+  b.appendChild(img); b.appendChild(document.createTextNode(a.label));
+  b.onclick = function () { log('launch ' + a.pkg); window.fully.startApplication(a.pkg); };
+  $('apps').appendChild(b);
+});
+
+// ---------- youtube ----------
+function openYt() {
+  $('yt').innerHTML = '<iframe allow="autoplay; encrypted-media" src="https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&controls=0&rel=0&playsinline=1&enablejsapi=1&origin=' +
+    encodeURIComponent(location.origin) + '"></iframe>';
+  $('yt').classList.add('show'); log('youtube opened (Back يغلقه)');
+}
+function closeYt() { if (!$('yt').classList.contains('show')) return false; $('yt').innerHTML = ''; $('yt').classList.remove('show'); log('youtube closed'); $('btnYt').focus(); return true; }
+$('btnYt').onclick = openYt;
+$('btnNav').onclick = function () { log('trying location = https://www.google.com'); location.href = 'https://www.google.com'; setTimeout(function () { log('still here: navigation blocked ✔'); }, 1500); };
+$('btnHome').onclick = function () { location.href = '/'; };
+
+// ---------- remote keys ----------
+function focusables() { return Array.prototype.slice.call(document.querySelectorAll('#tools button, #apps button')); }
+document.addEventListener('keydown', function (e) {
+  log('keydown key=' + e.key + ' keyCode=' + e.keyCode);
+  if (e.keyCode === 4 || e.key === 'GoBack' || e.keyCode === 27) { if (!closeYt()) log('Back على الصفحة الرئيسية: لا خروج ✔'); e.preventDefault(); return; }
+  var list = focusables(), i = list.indexOf(document.activeElement), tools = document.querySelectorAll('#tools button').length;
+  var d = { 37: 1, 39: -1, 38: -COLS, 40: COLS }[e.keyCode];   // RTL: left = next
+  if (d === undefined || $('yt').classList.contains('show')) return;
+  e.preventDefault();
+  if (i < 0) { list[0].focus(); return; }
+  var n;
+  if (i < tools) n = (e.keyCode === 40) ? tools : i + (Math.abs(d) === 1 ? d : 0);
+  else if (e.keyCode === 38 && i - COLS < tools) n = 0;
+  else n = i + d;
+  if (n >= 0 && n < list.length) list[n].focus();
+});
+$('btnYt').focus();
+log('page loaded');
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV Hub (based on Kids Home): a launcher (HOME) that shows the TV page in its own WebView,
+     plus a localhost-only API (127.0.0.1:8765) for page files and apps, and a LAN admin server (8080). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.kidstv.home"
+    android:versionCode="43"
+    android:versionName="43.0-hub">
+
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- reminders at the exact minute (Reminders.java); USE_EXACT_ALARM from Android 13 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Wi-Fi icon on the home dashboard: green when the TV has internet, grey otherwise -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14 (targetSdk 34): a foreground service must declare its type -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- granted via adb appops: lets the background API start activities on Android 10+ -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- granted via adb appops: serve the page files from /sdcard/kids_tv (Android 11 scoped storage) -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- granted via adb appops (optional): kids guard sees which app is in front (AUDIT L3) -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+
+    <!-- Android 11+ package visibility -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application android:label="TV Hub" android:allowBackup="false" android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".HomeActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:stateNotNeeded="true"
+            android:screenOrientation="landscape"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|smallestScreenSize|screenLayout|uiMode|density|fontScale|locale|layoutDirection"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- reminder alarm, and clock changes that move it -->
+        <receiver android:name=".Reminders$Receiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.kidstv.home.REMINDER" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <!-- screensaver: clock + prayer times (home) / clock + photo of the day (kids), instead of Google's photos -->
+        <service android:name=".HubDream" android:exported="true" android:label="TV Hub"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+        <service android:name=".LauncherService" android:exported="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Local web server that serves the TV home screen page and its phone admin page" />
+        </service>
+    </application>
+</manifest>
+
+
+
+
+
+

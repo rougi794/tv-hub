@@ -1,0 +1,31 @@
+# ---- secrets: never in git ----
+# app signing key and its password (copy them OUTSIDE this computer, see README)
+android/*.keystore
+android/*.jks
+android/keystore.pass
+*.pass
+# device settings: streaming account, YouTube key, Wi-Fi password (they live on the TVs only)
+config.json
+config.json.bak
+wifi.json
+device.json
+.env
+.env.*
+.local-test-pin.txt
+
+# ---- build output ----
+android/build/
+android/test/out*/
+android/*.apk
+android/*.idsig
+web/node_modules/
+web/dist/
+
+# ---- per-device notes (installed package lists before/after factory reset) ----
+backup/
+
+# ---- editor / OS ----
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
