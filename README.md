@@ -30,15 +30,7 @@ npm run deploy -- <IP غرفة المعيشة>:5555               # ملفات �
 ```
 
 ## تجهيز جهاز جديد (مرة واحدة)
-```
-adb install tv-hub.apk
-adb shell appops set com.kidstv.home MANAGE_EXTERNAL_STORAGE allow
-# ضع config.json في /sdcard/tv_hub_private/ ثم: npm run deploy -- <device>
-adb shell cmd package set-home-activity com.kidstv.home/.HomeActivity
-# على Google TV يلزم أيضًا (انظر H-002):
-adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx
-adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith
-```
+**الدليل الكامل خطوة بخطوة: [INSTALL.md](INSTALL.md)**. فيه تجهيز الحاسب، ومفتاح التوقيع، والبناء، وتفعيل وضع المطوّر على التلفاز، والتثبيت والصلاحيات، وملف الإعدادات الأول (`web/seed/config.example.json`)، والإعداد الأول، والتحقق.
 
 **الأسهل الآن:** صفحة الجوال ← «الأطفال» ← «إعدادات البث ويوتيوب»، للخوادم والحساب ومفتاح يوتيوب، مع زر «اختبار الاتصال». التعديل اليدوي التالي ما زال ممكنًا.
 
@@ -56,7 +48,7 @@ adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith
 ## الاختبار والصيانة
 ```
 cd web && npm test                         # قواعد أوقات المشاهدة
-npm run smoke -- <IP غرفة الأطفال>             # فحص أمني للتلفاز بعد كل نشر (16 فحصًا)
+npm run smoke -- <IP غرفة الأطفال>             # فحص أمني للتلفاز بعد كل نشر (25 فحصًا)
 adb shell touch /sdcard/tv_hub_private/debug   # تفعيل DevTools مؤقتًا (ثم أعد تشغيل التطبيق)، والإلغاء بـ rm
 ```
 - الصور (صورة اليوم والأيقونات المرفوعة) محفوظة داخل التطبيق، وadb لا يصل إليها. للنسخ الاحتياطي: صفحة الهاتف ← الصور ← «تنزيل كل الصور». **إلغاء تثبيت التطبيق يحذفها**، لكن التحديث (`adb install -r`) يحتفظ بها. صورة تُنسخ بـ adb إلى `/sdcard/tv_hub/today_images/` تُنقل إلى الداخل عند التشغيل التالي.

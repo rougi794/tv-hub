@@ -1,0 +1,15 @@
+{
+  "userSettings": {
+    "location": { "city": "Riyadh", "country": "Saudi Arabia", "timeZone": "Asia/Riyadh", "lat": 24.7136, "lon": 46.6753 },
+    "prayerMethod": 4,
+    "locale": "ar",
+    "quran": { "startDate": "2026-01-01" },
+    "security": { "pinCode": "1234" },
+    "stream": {},
+    "youtube": {}
+  },
+  "appConfig": {
+    "news": { "limitPerSource": 5, "refreshIntervalMinutes": 30 },
+    "files": {}
+  }
+}
