@@ -3,8 +3,8 @@
      plus a localhost-only API (127.0.0.1:8765) for page files and apps, and a LAN admin server (8080). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.kidstv.home"
-    android:versionCode="43"
-    android:versionName="43.0-hub">
+    android:versionCode="44"
+    android:versionName="44.0-hub">
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

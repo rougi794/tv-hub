@@ -95,7 +95,13 @@ adb -s <ip>:5555 shell settings put secure screensaver_components com.kidstv.hom
 ```bash
 adb -s <ip>:5555 shell settings put secure screensaver_components com.google.android.backdrop/com.google.android.backdrop.Backdrop
 ```
-- **متى تظهر:** داخل TV Hub تبقى الشاشة مضاءة كما كانت، فتظهر شاشة التوقف فقط عند الخمول داخل تطبيق آخر، بعد `screen_off_timeout` (10 دقائق على الجهازين).
+- **متى تظهر (منذ v44):**
+  - **تلفاز غرفة المعيشة:** بعد مدة الخمول في إعدادات التلفاز (`screen_off_timeout`، حاليًا 10 دقائق) بلا ضغطة ريموت، فوق الواجهة أو أي تطبيق لا يشغّل فيديو. تظهر خافتة، وأي زر يعيد الواجهة.
+  - **تلفاز غرفة الأطفال:** شاشته تبقى مضاءة داخل واجهة الأطفال (تجنّبًا للنوم العميق في شاومي)، فتظهر فقط عند الخمول داخل تطبيق آخر.
+- **تغيير المدة** (بالميلي ثانية، مثال 5 دقائق)، عبر وضع المطوّر وADB فقط:
+```bash
+adb -s <IP غرفة المعيشة>:5555 shell settings put system screen_off_timeout 300000
+```
 
 
 ## مكان الإعدادات (منذ v41)

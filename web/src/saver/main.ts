@@ -143,4 +143,5 @@ async function start(): Promise<void> {
   setInterval(drift, 60_000);
 }
 
+if (new URLSearchParams(location.search).has('dream')) document.documentElement.classList.add('dream');   // dimmed
 start();

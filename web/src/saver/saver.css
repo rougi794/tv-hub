@@ -16,3 +16,6 @@ body { color: #b8c0cc; font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; d
 .p.next b { color: #7fa7e0; }
 #next { font-size: 28px; color: #7fa7e0; }
 [hidden] { display: none !important; }
+/* shown as the TV screensaver (HubDream adds ?dream=1): drawn darker, the TV's backlight is often not dimmable */
+html.dream #box { opacity: .55; }
+html.dream #box.fade { opacity: 0; }

@@ -67,10 +67,13 @@ public class HomeActivity extends Activity {
 
     private final Handler ui = new Handler(Looper.getMainLooper());
 
-    // ---- screen policy (AUDIT L4, revised after the kids TV could not be woken) ----
-    // The screen stays on, as before. Only if device.json has "allowSleep": true does the kids interface let the TV's
+    // ---- screen policy (AUDIT L4, revised after the kids TV could not be woken; living room 2026-10-23) ----
+    // Home interface (living room TV): the screen is NOT held on, so after the TV's own idle time (Settings,
+    // screen_off_timeout, 10 min) Android starts the screensaver: TV Hub's HubDream (clock + prayer times), dimmed.
+    // That TV's sleep_timeout is "never", so it does not go on to sleep. Held on only while the page plays something.
+    // Kids interface: the screen stays on, as before. Only if device.json has "allowSleep": true does it let the TV's
     // own screensaver / sleep timers run after 20 minutes without a key (never while something plays). Some boxes
-    // (Xiaomi MiTV-AFMU0) fell into a deep sleep that the remote could not wake, so sleeping is opt-in.
+    // (Xiaomi MiTV-AFMU0) fell into a deep sleep that the remote could not wake, so sleeping is opt-in there.
     private static final long KIDS_IDLE_MS = 20 * 60 * 1000;
     private static volatile HomeActivity current;
     private static volatile boolean playing = false;
@@ -87,9 +90,13 @@ public class HomeActivity extends Activity {
     }
 
     private void applyScreenPolicy() {
-        boolean allowSleep = "kids".equals(LauncherService.modeOf(this))
-                && LauncherService.readDeviceFile().optBoolean("allowSleep", false);
-        boolean keep = !allowSleep || playing || System.currentTimeMillis() - lastInput < KIDS_IDLE_MS;
+        boolean keep;
+        if (!"kids".equals(LauncherService.modeOf(this))) {
+            keep = playing;                                       // living room: the screensaver may start
+        } else {
+            boolean allowSleep = LauncherService.readDeviceFile().optBoolean("allowSleep", false);
+            keep = !allowSleep || playing || System.currentTimeMillis() - lastInput < KIDS_IDLE_MS;
+        }
         if (keep) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }

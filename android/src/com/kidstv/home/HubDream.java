@@ -21,7 +21,7 @@ import static com.kidstv.home.HomeActivity.TAG;
  * Selected as the system screensaver with: settings put secure screensaver_components com.kidstv.home/.HubDream
  */
 public class HubDream extends DreamService {
-    private static final String URL = "http://127.0.0.1:8765/saver.html";
+    private static final String URL = "http://127.0.0.1:8765/saver.html?dream=1";
     // shown when the local server does not answer (service not running): a plain clock, nothing to load
     private static final String FALLBACK = "<!doctype html><meta charset=utf-8><body style='margin:0;background:#000;color:#9aa4b2;"
             + "font:bold 140px sans-serif;display:flex;align-items:center;justify-content:center;height:100vh'><div id=t></div>"
@@ -38,6 +38,11 @@ public class HubDream extends DreamService {
         setInteractive(false);
         setFullscreen(true);
         setScreenBright(false);                                  // dimmed: kinder to the panel and the room
+        // On TVs the dream's own dimming often does nothing: the window asks for a low backlight as well, and the
+        // page itself is drawn darker (saver.css, .dream). Owner request 2026-10-23: dim during the screensaver.
+        android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.screenBrightness = 0.2f;
+        getWindow().setAttributes(lp);
         // The page comes from LauncherService, which the home screen keeps running. The dream does not start it:
         // a startForegroundService() from here crashed the app when the dream ended (H-019). If the server does
         // not answer, a plain clock is shown (FALLBACK) and the page is retried every minute.
