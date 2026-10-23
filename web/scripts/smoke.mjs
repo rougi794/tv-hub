@@ -1,5 +1,5 @@
 // Post-deploy security check of one TV (no passwords needed).
-//   node scripts/smoke.mjs 192.168.8.181          (npm run smoke -- 192.168.8.181)
+//   node scripts/smoke.mjs 192.168.1.50          (npm run smoke -- 192.168.1.50)
 // Checks the phone admin server (8080) from this PC and, through `adb forward`, the TV's local server (8765).
 import { execFileSync } from 'node:child_process';
 import http from 'node:http';

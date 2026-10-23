@@ -1629,11 +1629,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* --- Row C: الوصول السريع (عرض كامل) --- */}
+          {/* --- Row C: التطبيقات (عرض كامل) --- */}
           <div className="flex flex-col gap-2 bg-zinc-800/40 p-3 rounded-3xl border border-white/5 backdrop-blur-xl">
             <h3 className="text-base font-medium flex items-center gap-2 text-zinc-400">
               <ChevronLeft className="w-5 h-5 text-zinc-500" />
-              الوصول السريع
+              التطبيقات
             </h3>
             <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
               {quickLinks.map((link) => (

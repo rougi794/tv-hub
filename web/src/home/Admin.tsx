@@ -31,7 +31,7 @@ interface AdminStatus {
 type Tab = 'home' | 'kids' | 'images' | 'account';
 
 // Which TV this page belongs to (UX-AUDIT P1). The interface is only told after login (AUDIT-2 N9), so the phone
-// remembers it per address and the login screen can already say "تلفاز الأطفال" next time.
+// remembers it per address and the login screen can already say "تلفاز غرفة الأطفال" next time.
 const MODE_KEY = 'tvhub_mode_' + location.host;
 const knownMode = (): 'home' | 'kids' | undefined => {
   try { const m = localStorage.getItem(MODE_KEY); return m === 'kids' || m === 'home' ? m : undefined; } catch { return undefined; }
@@ -41,7 +41,7 @@ const rememberMode = (m: 'home' | 'kids') => {
   document.title = deviceTitle(m);
 };
 const deviceTitle = (m: 'home' | 'kids' | undefined) =>
-  (m === 'kids' ? '🧒 تلفاز الأطفال' : m === 'home' ? '🏠 تلفاز المنزل' : '📺 التلفاز') + ' · ' + location.hostname;
+  (m === 'kids' ? '🧒 تلفاز غرفة الأطفال' : m === 'home' ? '🛋️ تلفاز غرفة المعيشة' : '📺 التلفاز') + ' · ' + location.hostname;
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'home', label: '🏠 المنزل' },
@@ -238,7 +238,7 @@ export default function Admin() {
         if (password.length < 8) { setError('8 أحرف على الأقل'); return; }   // the TV refuses shorter ones (AUDIT S2)
         if (password !== password2) { setError('كلمتا المرور غير متطابقتين'); return; }
         const r = await postJson<{ ok: boolean }>('/api/admin/setpass', { 'X-Admin-New': password, 'X-Owner-Pin': ownerPin });
-        if (!r.ok) { setError(status.pinSet ? 'تعذر الحفظ — تحقق من رمز المالك' : 'تعذر الحفظ'); return; }
+        if (!r.ok) { setError(status.pinSet ? 'تعذر الحفظ — تحقق من رمز الأدمن' : 'تعذر الحفظ'); return; }
         setStatus({ ...status, set: true });
       }
       await login(password);
@@ -656,7 +656,7 @@ export default function Admin() {
           {status && !status.set && (
             <p className="text-sm text-slate-400 text-center mb-6 leading-6">
               أول مرة: اختر كلمة مرور (8 أحرف على الأقل). تُحفظ على التلفزيون ويُطلب إدخالها لاحقًا.
-              {status.pinSet && ' للتأكيد أدخل رمز المالك الذي تستخدمه في القسم المخفي على التلفزيون.'}
+              {status.pinSet && ' للتأكيد أدخل رمز الأدمن الذي تستخدمه في القسم المخفي على التلفزيون.'}
             </p>
           )}
           {(!status || status.set) && <div className="mb-6" />}
@@ -686,7 +686,7 @@ export default function Admin() {
               type="password"
               value={ownerPin}
               onChange={(e) => setOwnerPin(e.target.value)}
-              placeholder="رمز المالك على التلفزيون"
+              placeholder="رمز الأدمن على التلفزيون"
               inputMode="numeric"
               autoComplete="off"
               className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-4 mb-4 focus:outline-none focus:border-blue-500 text-center text-lg"
@@ -1224,7 +1224,7 @@ export default function Admin() {
               {passMsg && <p className="text-sm text-slate-300">{passMsg}</p>}
             </form>
             <p className="text-xs text-slate-500 mt-4 leading-6">
-              إن نُسيت كلمة المرور: القسم المخفي على التلفزيون (↑ ↑ ↓ ↓ ← → ثم رمز المالك) ← «إعادة تعيين كلمة مرور الجوال»، ثم أنشئ كلمة جديدة من هنا.
+              إن نُسيت كلمة المرور: القسم المخفي على التلفزيون (↑ ↑ ↓ ↓ ← → ثم رمز الأدمن) ← «إعادة تعيين كلمة مرور الجوال»، ثم أنشئ كلمة جديدة من هنا.
             </p>
           </section>
         )}

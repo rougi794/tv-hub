@@ -1,6 +1,6 @@
 // Deploys dist/ to a TV over adb.
 //   node scripts/deploy.mjs [device] [root]
-//   device: adb serial (required, e.g. 192.168.8.202:5555), root: web folder on the TV (default /sdcard/tv_hub)
+//   device: adb serial (required, e.g. 192.168.1.50:5555), root: web folder on the TV (default /sdcard/tv_hub)
 // Page files are replaced; data files from seed/data are pushed only when missing on the TV,
 // so the owner's meals, reminders, images and playlists are never overwritten.
 import { execFileSync } from 'node:child_process';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, '..');
 const device = process.argv[2];
-if (!device) { console.error('usage: node scripts/deploy.mjs <adb-serial, e.g. 192.168.8.202:5555> [root]   (find TVs: npm run find-tvs)'); process.exit(2); }
+if (!device) { console.error('usage: node scripts/deploy.mjs <adb-serial, e.g. 192.168.1.50:5555> [root]   (find TVs: npm run find-tvs)'); process.exit(2); }
 const root = process.argv[3] || '/sdcard/tv_hub';
 
 // MSYS_NO_PATHCONV keeps Git Bash from rewriting /sdcard/... into a Windows path

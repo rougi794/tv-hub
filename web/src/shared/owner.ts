@@ -133,8 +133,8 @@ function openPin(then: 'panel' | 'change'): void {
   hubApi<{ set: boolean; lockedFor: number }>('/pin/status').then((st) => {
     view = 'pin';
     if (then === 'change') { pinMode = 'new'; renderPin('رمز جديد', 'أدخل الرمز الجديد (6 إلى 8 أرقام)'); }
-    else if (!st.set) { pinMode = 'new'; renderPin('إنشاء رمز المالك', 'أول مرة: اختر رمزًا من 6 إلى 8 أرقام'); }
-    else { pinMode = 'check'; renderPin('رمز المالك', st.lockedFor ? waitText(st.lockedFor) : ''); }
+    else if (!st.set) { pinMode = 'new'; renderPin('إنشاء رمز الأدمن', 'أول مرة: اختر رمزًا من 6 إلى 8 أرقام'); }
+    else { pinMode = 'check'; renderPin('رمز الأدمن', st.lockedFor ? waitText(st.lockedFor) : ''); }
   }).catch(() => { view = 'pin'; show(el('div', 'hub-panel', 'خدمة TV Hub غير متاحة')); });
 }
 
@@ -183,7 +183,7 @@ function showPanel(): void {
   const p = el('div', 'hub-panel');
   const head = el('div', 'hub-head');
   const ver = el('span', 'hub-ver', 'TV Hub v' + HUB_VERSION);
-  head.append(el('h3', '', 'إعدادات المالك'), ver);
+  head.append(el('h3', '', 'إعدادات الأدمن'), ver);
   hubApi<{ app?: string }>('/ping').then((p) => { if (p.app) ver.textContent += ' · app ' + p.app; }).catch(() => {});
   p.appendChild(head);
 
@@ -213,7 +213,7 @@ function showPanel(): void {
 
   p.appendChild(el('div', 'hub-msg', opts.mode === 'kids'
     ? 'OK على تطبيق = إظهاره أو إخفاؤه في «البرامج» للطفل. زر ▶ لتشغيله.'
-    : 'OK على تطبيق = إظهاره أو إخفاؤه في «الوصول السريع». زر ▶ لتشغيله. (الترتيب والأسماء والروابط من صفحة الجوال)'));
+    : 'OK على تطبيق = إظهاره أو إخفاؤه في «التطبيقات». زر ▶ لتشغيله. (الترتيب والأسماء والروابط من صفحة الجوال)'));
   const apps = el('div', 'hub-apps');
   p.appendChild(apps);
   show(p);
@@ -269,7 +269,7 @@ function loadApps(box: HTMLElement): void {
         wrap.append(row, button('▶', () => run(a.pkg), 'hub-btn hub-run'));
       } else {
         const shown = (): boolean => linkSet.includes(a.pkg);
-        tag.textContent = shown() ? 'في الوصول السريع' : 'مخفي';
+        tag.textContent = shown() ? 'في التطبيقات' : 'مخفي';
         row.classList.toggle('on', shown());
         row.appendChild(tag);
         row.onclick = () => {
@@ -279,7 +279,7 @@ function loadApps(box: HTMLElement): void {
               linkSet = shown() ? linkSet.filter((p) => p !== a.pkg) : linkSet.concat(a.pkg);
               homeLinksChanged = true;
               row.classList.toggle('on', shown());
-              tag.textContent = shown() ? 'في الوصول السريع' : 'مخفي';
+              tag.textContent = shown() ? 'في التطبيقات' : 'مخفي';
             }).catch(() => toast('تعذر الحفظ'));
         };
         wrap.append(row, button('▶', () => run(a.pkg), 'hub-btn hub-run'));
