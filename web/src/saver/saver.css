@@ -4,6 +4,7 @@ body { color: #b8c0cc; font-family: system-ui, 'Segoe UI', Tahoma, sans-serif; d
 #box { display: flex; flex-direction: column; align-items: center; gap: 18px; transition: transform 2.5s ease-in-out, opacity 1.2s; }
 #box.fade { opacity: 0; }
 #time { font-size: 150px; font-weight: 700; line-height: 1; letter-spacing: 2px; color: #d6dbe3; direction: ltr; }
+#time .sec { font-size: 72px; color: #9aa4b2; font-variant-numeric: tabular-nums; }
 #time small { font-size: 54px; margin-inline-start: 14px; color: #8b95a5; }
 #dates { display: flex; gap: 28px; font-size: 30px; }
 #hijri { color: #c9a94a; }

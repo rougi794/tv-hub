@@ -17,13 +17,17 @@ const localDate = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone }
 
 function tick(): void {
   const now = new Date();
-  const t = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', timeZone });
-  const m = /^(\d\d:\d\d)\s?(AM|PM)$/i.exec(t);
+  const t = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone });
+  const m = /^(\d\d:\d\d):(\d\d)\s?(AM|PM)$/i.exec(t);
   const time = $('time');
   if (m) {
+    // HH:MM large, :SS smaller (admin request 2026-10-23), then ص / م
+    const sec = document.createElement('span');
+    sec.className = 'sec';
+    sec.textContent = ':' + m[2];
     const small = document.createElement('small');
-    small.textContent = m[2].toUpperCase() === 'AM' ? 'ص' : 'م';
-    time.replaceChildren(document.createTextNode(m[1]), small);
+    small.textContent = m[3].toUpperCase() === 'AM' ? 'ص' : 'م';
+    time.replaceChildren(document.createTextNode(m[1]), sec, small);
   } else {
     time.textContent = t;
   }
@@ -132,7 +136,7 @@ async function start(): Promise<void> {
     .catch(() => ({})) as Cfg;
   timeZone = cfg.userSettings?.location?.timeZone || undefined;
   tick();
-  setInterval(tick, 10_000);
+  setInterval(tick, 1000);                       // every second: the seconds are shown
   const mode = await getMode().catch(() => 'home');
   if (mode === 'kids') {
     loadPhoto();
